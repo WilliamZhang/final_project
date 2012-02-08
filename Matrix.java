@@ -199,7 +199,7 @@ public final class Matrix {
 		}
 	}
 	
-	// test client
+	// test client, using to test if Matrix works well
 	public static void main(String[] args) {
         double[][] d = { { 1, 2, 3 }, { 4, 5, 6 }, { 9, 1, 3} };
         Matrix D = new Matrix(d);
