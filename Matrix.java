@@ -262,6 +262,15 @@ public final class Matrix {
 	// implement the function mul
 	public Matrix mul(Matrix B) {
 		Matrix A = this;
+		if (A.M == B.M && A.N == 1 && B.N == 1) {
+			Matrix temp = new Matrix(1, 1);
+			double sum = 0;
+			for (int i = 0; i < B.M; i++) {
+				sum += A.data[i][0] * B.data[i][0];
+			}
+			temp.data[0][0] = sum;
+			return temp;
+		}
 		if (A.N != B.M) {
 			throw new RuntimeException("Incompatible matrix dimensions");
 		}
@@ -293,7 +302,7 @@ public final class Matrix {
 
 	// return B = A^-1, aka the inverse of matrix A
 	public Matrix inverse() {
-		Matrix A = this;
+		Matrix A = new Matrix(this);
 		if (A.M != A.N) {
 			throw new RuntimeException("Incompatible matrix dimensions");
 		}
@@ -506,16 +515,27 @@ public final class Matrix {
 	// compute one norm for this matrix; return maximum column sum
 	// implement the function norm
 	public double norm(int p) {
-		if (p != 1) {
-			throw new RuntimeException("Not Implemented Error");
-		}
-		double m = 0;
-		for (int j = 0; j < N; j++) {
-			double s = 0;
+		double m = 0.0;
+		if (M == 1 || N == 1) {
+			double s = 0.0;
 			for (int i = 0; i < M; i++) {
-				s += Math.abs(data[i][j]);
+				for (int j = 0; j < N; j++) {
+					s += Math.pow(data[i][j], p);
+				}
 			}
-			m = Math.max(m, s);
+			m = Math.pow(s, 1.0 / p);
+		} else {
+			if (p != 1) {
+				throw new RuntimeException("Not Implemented Error");
+			}
+
+			for (int j = 0; j < N; j++) {
+				double s = 0;
+				for (int i = 0; i < M; i++) {
+					s += Math.abs(data[i][j]);
+				}
+				m = Math.max(m, s);
+			}
 		}
 		return m;
 	}
@@ -578,6 +598,106 @@ public final class Matrix {
 		}
 
 		return s;
+	}
+
+	// Cholesky Decomposition
+	// implement the function Cholesky
+	public Matrix Cholesky() {
+		Matrix A = new Matrix(this);
+		if (A.is_almost_symmetric() == false) {
+			throw new ArithmeticException("Not Symmetric");
+		}
+
+		for (int k = 0; k < N; k++) {
+			if (A.data[k][k] <= 0) {
+				throw new ArithmeticException("Not Positive Definitive");
+			}
+			double p = A.data[k][k] = Math.sqrt(A.data[k][k]);
+			for (int i = k + 1; i < N; i++) {
+				A.data[i][k] = A.data[i][k] / p;
+			}
+			for (int j = k + 1; j < N; j++) {
+				p = A.data[j][k];
+				for (int i = k + 1; i < N; i++) {
+					A.data[i][j] = A.data[i][j] - p * A.data[i][k];
+				}
+			}
+		}
+
+		for (int i = 0; i < N; i++) {
+			for (int j = i + 1; j < N; j++) {
+				A.data[i][j] = 0;
+			}
+		}
+
+		return A;
+	}
+
+	// implement the function is_positive_definite
+	public boolean is_positive_definite() {
+		Matrix A = this;
+		if (A.is_almost_symmetric() == false) {
+			return false;
+		}
+		try {
+			A.Cholesky();
+			return true;
+		} catch (RuntimeException e) {
+			return false;
+		}
+	}
+
+	// return B = A - x
+	public Matrix minus(double x) {
+		Matrix A = this;
+		Matrix B = new Matrix(this);
+		for (int i = 0; i < M; i++) {
+			for (int j = 0; j < N; j++) {
+				B.data[i][j] = A.data[i][j] - x;
+			}
+		}
+		return B;
+	}
+
+	// assess Markovitz risk/return
+	// implement the function Markovitz
+	public Box<Matrix, Matrix, Matrix> Markovitz(Matrix mu, double r_free) {
+		Box<Matrix, Matrix, Matrix> container = new Box<Matrix, Matrix, Matrix>();
+
+		Matrix A = this;
+		Matrix x = new Matrix(A.M, 1);
+		x = A.inverse().mul(mu.minus(r_free));
+		double sum = 0;
+		for (int r = 0; r < x.M; r++) {
+			sum += x.data[r][0];
+		}
+		x = x.rmul(1.0 / sum);
+
+		Matrix portfolio = new Matrix(1, x.M);
+		for (int i = 0; i < x.M; i++) {
+			portfolio.data[0][i] = x.data[i][0];
+		}
+
+		Matrix portfolio_return = mu.mul(x);
+		Matrix portfolio_risk = (x.mul(A.mul(x))).sqrt();
+
+		container.setT(portfolio);
+		container.setU(portfolio_return);
+		container.setV(portfolio_risk);
+
+		return container;
+
+	}
+
+	// implement the function sqrt
+	public Matrix sqrt() {
+		Matrix A = new Matrix(this);
+		for (int i = 0; i < M; i++) {
+			for (int j = 0; j < N; j++) {
+				A.data[i][j] = Math.sqrt(A.data[i][j]);
+			}
+		}
+		return A;
 	}
 
 }

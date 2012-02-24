@@ -175,44 +175,158 @@ public class Test {
 		K.show();
 		System.out.println();
 
-		// test method is_almost_symmetric
+		// testing method is_almost_symmetric
 		System.out.println("testing method is_almost_symmetric: ");
 		System.out.println(C.is_almost_symmetric());
 		System.out.println();
 
-		// test method is_almost_zero
+		// testing method is_almost_zero
 		System.out.println("testing method is_almost_zero: ");
 		System.out.println(C.is_almost_zero());
 		System.out.println();
 
-		// test method norm
+		// testing method norm
 		System.out.println("testing method norm: ");
 		System.out.println(B.norm(1));
 		System.out.println();
 
-		// test method norm_infi
+		// testing method norm_infi
 		System.out.println("testing method norm_infi: ");
 		System.out.println(B.norm_infi());
 		System.out.println();
 
-		// test method norm_frob
+		// testing method norm_frob
 		System.out.println("testing method norm_frob: ");
 		System.out.println(B.norm_frob());
 		System.out.println();
 
-		// test method condition_number
+		// testing method condition_number
 		System.out.println("testing method condition_number: ");
 		System.out.println(C.condition_number());
 		System.out.println();
-		
-		// test method exp
+
+		// testing method exp
 		System.out.println("testing method exp: ");
-		double[][] dexp = {{1,2},{3,4}};
+		double[][] dexp = { { 1, 2 }, { 3, 4 } };
 		Matrix L = Matrix.from_list(dexp);
 		L.exp().show();
 		System.out.println();
-		
-		
+
+		// testing method Cholesky
+		System.out.println("testing method Cholesky: ");
+		double[][] cholesky = { { 3, 3, 5 }, { 3, 5, 9 }, { 5, 9, 17 } };
+		Matrix Cho = Matrix.from_list(cholesky);
+		Cho.Cholesky().show();
+		System.out.println();
+
+		// testing method is_positive_definite
+		System.out.println("testing method is_positive_definite: ");
+		System.out.println(Cho.is_positive_definite());
+		System.out.println();
+
+		// testing method Markovitz
+		System.out.println("testing method Markovitz: ");
+		double[][] mark1 = { { 0.04, 0.006, 0.02 }, { 0.006, 0.09, 0.06 },
+				{ 0.02, 0.06, 0.16 } };
+		double[][] mark2 = { { 0.10 }, { 0.12 }, { 0.15 } };
+		Matrix cov = Matrix.from_list(mark1);
+		Matrix mu = Matrix.from_list(mark2);
+		double r_free = 0.05;
+		Box<Matrix, Matrix, Matrix> container = cov.Markovitz(mu, r_free);
+		container.getT().show();
+		container.getU().show();
+		container.getV().show();
+		System.out.println();
+
+		// testing method sqrt
+		System.out.println("testing method sqrt: ");
+		Matrix sqrt = new Matrix(3, 3, 4);
+		sqrt.sqrt().show();
+		System.out.println();
+
+		// testing f(x), where x is a double
+		System.out.println("testing function f(x), where x is a double: ");
+		Function f = new SpecFunc();
+		double x = 2.0;
+		System.out.println(f.apply(x));
+		System.out.println();
+
+		// testing f(x), where x is an array
+		System.out.println("testing function f(x), where x is an array: ");
+		double[] array = { 1, 2, 3 };
+		double[] array2 = f.apply(array);
+		for (int i = 0; i < array2.length; i++) {
+			System.out.print(array2[i] + " ");
+		}
+		System.out.println();
+		System.out.println();
+
+		// testing f(x), where x is an array of arrays
+		System.out
+				.println("testing function f(x), where x is an array of arrays: ");
+		double[][] fdata = { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };
+		double[][] fdata2 = f.apply(fdata);
+		int frow = fdata2.length;
+		int fcol = fdata2.length;
+		for (int i = 0; i < frow; i++) {
+			for (int j = 0; j < fcol; j++) {
+				System.out.printf("%9.4f", fdata2[i][j]);
+			}
+			System.out.println();
+		}
+		System.out.println();
+
+		// testing f(x), where x is a Matrix
+		System.out.println("testing function f(x), where x is a Matrix: ");
+		Matrix fA = new Matrix(fdata);
+		Matrix fB = f.apply(fA);
+		fB.show();
+		System.out.println();
+
+		// testing method D
+		System.out.println("testing method D: ");
+		Function Df = new SpecFunc();
+		Algorithm Algo = new Algorithm();
+		System.out.println(Algo.D(Df, 2));
+		System.out.println();
+
+		// testing method fit_least_squares
+		System.out.println("testing method fit_least_squares: ");
+		double[][] f_points = { { 1, 2 }, { 3, 4 } };
+		Function[] f_fls = { new SpecFunc() };
+		Box<double[][], Double, Matrix> f_container = Algo.fit_least_squares(
+				f_points, f_fls);
+		Matrix f_fitA = new Matrix(f_container.getT());
+		f_fitA.show();
+		System.out.printf("%9.4f", f_container.getU());
+		System.out.println();
+		f_container.getV().show();
+		System.out.println();
+
+		// testing method solve_fixed_point
+		System.out.println("testing method solve_fixed_point: ");
+		double sfp_x = -2.0;
+		Function sfp_f = new SpecFunc();
+		Algorithm sfpAl = new Algorithm(sfp_f);
+		System.out.println(sfpAl.solve_fixed_point(sfp_f, sfp_x));
+		System.out.println();
+
+		// testing method solve_bisection
+		System.out.println("testing method solve_bisection: ");
+		double sb_a = -1.0;
+		double sb_b = 0.0;
+		Function sb_f = new SpecFunc();
+		Algorithm sbnAl = new Algorithm();
+		System.out.println(sbnAl.solve_bisection(sb_f, sb_a, sb_b));
+		System.out.println();
+
+		// testing method solve_newton
+		System.out.println("testing method solve_newton: ");
+		double sn_x = 0.0;
+		Function sn_f = new SpecFunc();
+		System.out.println(sbnAl.solve_newton(sn_f, sn_x));
+		System.out.println();
+
 	}
 
 }
